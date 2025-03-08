@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora Polinomio de Newton</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.6.4/math.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+            background-color: #f8f8f8;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #f4a300; /* Durazno */
+            padding: 10px;
+            border-radius: 10px;
+        }
+        header img {
+            height: 50px;
+        }
+        header h1 {
+            margin: 0;
+            color: white;
+            font-size: 24px;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            margin: 10px;
+            padding: 10px;
+            cursor: pointer;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .sidebar {
+            position: fixed;
+            top: 10%;
+            right: 10px;
+            background-color: #007bff;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .sidebar-content {
+            display: none;
+            position: fixed;
+            top: 10%;
+            right: 0;
+            background-color: white;
+            color: black;
+            padding: 20px;
+            width: 300px;
+            height: 80%;
+            border-radius: 5px;
+            box-shadow: -2px 2px 10px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+        }
+        .sidebar-content.active {
+            display: block;
+        }
+        .sidebar-content h3 {
+            margin-top: 0;
+        }
+        .sidebar-content textarea {
+            width: 100%;
+            height: 300px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div>
+        <img src="path_to_logo_uneve.png" alt="UNEVE Logo">
+        <h1>UNEVE - Universidad Estatal del Valle de Ecatepec</h1>
+    </div>
+    <div>
+        <img src="path_to_logo_icm.png" alt="ICM Logo">
+        <h1>ICM - Ingeniería en Comunicación Multimedia</h1>
+    </div>
+</header>
+
+<div class="container">
+    <h2>Calculadora del Polinomio de Newton</h2>
+    <p>Ingresa hasta 4 puntos (x, f(x)) para calcular el polinomio interpolante.</p>
+    <div id="puntos">
+        <input type="number" id="x0" placeholder="x0"> <input type="number" id="fx0" placeholder="f(x0)"><br>
+        <input type="number" id="x1" placeholder="x1"> <input type="number" id="fx1" placeholder="f(x1)"><br>
+        <input type="number" id="x2" placeholder="x2"> <input type="number" id="fx2" placeholder="f(x2)"><br>
+        <input type="number" id="x3" placeholder="x3"> <input type="number" id="fx3" placeholder="f(x3)"><br>
+    </div>
+    <button onclick="calcularPolinomio()">Calcular Polinomio</button>
+    <h3>Polinomio Interpolante</h3>
+    <p id="polinomio"></p>
+    <h3>Evaluar en X</h3>
+    <input type="number" id="valorX" placeholder="Ingresa X">
+    <button onclick="evaluarPolinomio()">Evaluar</button>
+    <h3>Resultado</h3>
+    <p id="resultado"></p>
+</div>
+
+<!-- Sidebar Button -->
+<div class="sidebar" onclick="toggleSidebar()">Ver Integrantes</div>
+
+<!-- Sidebar Content -->
+<div class="sidebar-content" id="sidebar-content">
+    <h3>Integrantes</h3>
+    <textarea readonly>
+        Ramírez Pérez Mario Carlos
+        Ochoa rubio Sergio Emiliano
+        Valdez espinoza Luis Alberto
+        Tafoya Monrroy Cinthia Johanna
+    </textarea>
+</div>
+
+<script>
+    let coef = [], x = [];
+
+    function calcularPolinomio() {
+        x = [], fx = [];
+        for (let i = 0; i < 4; i++) {
+            let xi = document.getElementById(`x${i}`).value;
+            let fxi = document.getElementById(`fx${i}`).value;
+            if (xi !== "" && fxi !== "") {
+                x.push(parseFloat(xi));
+                fx.push(parseFloat(fxi));
+            }
+        }
+
+        if (x.length < 2) {
+            alert("Se necesitan al menos dos puntos para interpolar.");
+            return;
+        }
+
+        let n = x.length;
+        coef = [...fx];
+        for (let j = 1; j < n; j++) {
+            for (let i = n - 1; i >= j; i--) {
+                coef[i] = (coef[i] - coef[i - 1]) / (x[i] - x[i - j]);
+            }
+        }
+
+        let polinomio = `P(x) = ${coef[0].toFixed(5)}`;
+        let termino = "";
+        for (let i = 1; i < n; i++) {
+            termino += `(x - ${x[i - 1].toFixed(2)})`;
+            polinomio += ` + ${coef[i].toFixed(5)}${termino}`;
+        }
+
+        document.getElementById("polinomio").innerHTML = polinomio;
+    }
+
+    function evaluarPolinomio() {
+        let valorX = parseFloat(document.getElementById("valorX").value);
+        if (isNaN(valorX)) {
+            alert("Ingresa un valor de X válido.");
+            return;
+        }
+
+        let resultado = coef[0];
+        let producto = 1;
+        for (let i = 1; i < coef.length; i++) {
+            producto *= (valorX - x[i - 1]);
+            resultado += coef[i] * producto;
+        }
+
+        document.getElementById("resultado").innerHTML = `P(${valorX}) = ${resultado.toFixed(5)}`;
+    }
+
+    function toggleSidebar() {
+        document.getElementById("sidebar-content").classList.toggle("active");
+    }
+</script>
+
+</body>
+</html>
